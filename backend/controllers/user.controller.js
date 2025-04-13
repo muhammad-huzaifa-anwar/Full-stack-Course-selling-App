@@ -5,6 +5,7 @@ import { z } from "zod";
 import config from "../config.js";
 import { Purchase } from "../models/purchase.model.js";
 import { Course } from "../models/course.model.js";
+
 export const signup = async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
 

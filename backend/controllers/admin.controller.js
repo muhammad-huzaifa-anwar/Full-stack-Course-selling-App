@@ -48,38 +48,59 @@ export const signup = async (req, res) => {
   }
 };
 
+// Admin login controller
 export const login = async (req, res) => {
   const { email, password } = req.body;
-  try {
-    const admin = await Admin.findOne({ email: email });
-    const isPasswordCorrect = await bcrypt.compare(password, admin.password);
 
-    if (!admin || !isPasswordCorrect) {
-      return res.status(403).json({ errors: "Invalid credentials" });
+  try {
+    // Step 1: Find admin by email
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(404).json({ errors: "Admin not found" });
     }
 
-    // jwt code
+    // Step 2: Compare passwords
+    const isPasswordCorrect = await bcrypt.compare(password, admin.password);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({ errors: "Invalid password" });
+    }
+
+    // Step 3: Generate JWT token
     const token = jwt.sign(
       {
         id: admin._id,
+        email: admin.email,
+        role: "admin", // Optional: Add role for better authorization
       },
-      config.JWT_ADMIN_PASSWORD,
-      { expiresIn: "1d" }
+      config.JWT_ADMIN_PASSWORD, // Use your JWT secret key
+      { expiresIn: "1d" } // Token expiry time
     );
+
+    // Step 4: Set cookie (optional)
     const cookieOptions = {
       expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
-      httpOnly: true, //  can't be accsed via js directly
-      secure: process.env.NODE_ENV === "production", // true for https only
-      sameSite: "Strict", // CSRF attacks
+      httpOnly: true, // Cannot be accessed via JS
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      sameSite: "Strict", // Prevent CSRF attacks
     };
     res.cookie("jwt", token, cookieOptions);
-    res.status(201).json({ message: "Login successful", admin, token });
+
+    // Step 5: Send response
+    res.status(200).json({
+      message: "Admin login successful",
+      admin: {
+        _id: admin._id,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        email: admin.email,
+      },
+      token,
+    });
   } catch (error) {
-    res.status(500).json({ errors: "Error in login" });
-    console.log("error in login", error);
+    console.log("Error in admin login:", error);
+    res.status(500).json({ errors: "Internal server error" });
   }
 };
-
 export const logout = (req, res) => {
   try {
    
