@@ -1,27 +1,25 @@
 import React, { useState } from "react";
-import logo from "../../public/logo.webp";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { BACKEND_URL } from "../utils/utils";
+
 function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [errorMessage, setErrorMessage] = useState("");
-
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ password });
+    setErrorMessage("");
+    setIsLoading(true);
+
     try {
       const response = await axios.post(
-        `${BACKEND_URL}/user/login`,
-        {
-          email,
-          password,
-        },
+        `${BACKEND_URL}/admin/login`,
+        { email, password },
         {
           withCredentials: true,
           headers: {
@@ -29,39 +27,49 @@ function AdminLogin() {
           },
         }
       );
-      console.log("AdminLogin successful: ", response.data);
+
+      console.log("Admin login successful:", response.data);
       toast.success(response.data.message);
+
+      // Save admin data and token to localStorage
+      localStorage.setItem(
+        "admin",
+        JSON.stringify({ ...response.data.admin, token: response.data.token })
+      );
+
       navigate("/admin/dashboard");
-      localStorage.setItem("admin", JSON.stringify(response.data));
     } catch (error) {
       if (error.response) {
-        setErrorMessage(error.response.data.errors || "AdminLogin failed!!!");
+        setErrorMessage(error.response.data.errors || "Admin login failed");
+        toast.error(error.response.data.errors || "Admin login failed");
+      } else {
+        setErrorMessage("An unexpected error occurred. Please try again.");
+        toast.error("An unexpected error occurred. Please try again.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-gradient-to-r from-black to-blue-950 ">
-      <div className="h-screen container mx-auto flex  items-center justify-center text-white">
+    <div className="bg-gradient-to-r from-black to-blue-950">
+      <div className="h-screen container mx-auto flex items-center justify-center text-white">
         {/* Header */}
-        <header className="absolute top-0 left-0 w-full flex justify-between items-center p-5  ">
+        <header className="absolute top-0 left-0 w-full flex justify-between items-center p-5">
           <div className="flex items-center space-x-2">
-            <img src={logo} alt="Logo" className="w-10 h-10 rounded-full" />
-            <Link to={"/"} className="text-xl font-bold text-orange-500">
+            <img src="/logo.webp" alt="Logo" className="w-10 h-10 rounded-full" />
+            <Link to="/" className="text-xl font-bold text-orange-500">
               CourseHaven
             </Link>
           </div>
           <div className="flex items-center space-x-4">
             <Link
-              to={"/admin/signup"}
+              to="/admin/signup"
               className="bg-transparent border border-gray-500 py-2 px-4 rounded-md"
             >
               Signup
             </Link>
-            <Link
-              to={"/courses"}
-              className="bg-orange-500 py-2 px-4 rounded-md"
-            >
+            <Link to="/courses" className="bg-orange-500 py-2 px-4 rounded-md">
               Join now
             </Link>
           </div>
@@ -78,7 +86,7 @@ function AdminLogin() {
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="email" className=" text-gray-400 mb-2">
+              <label htmlFor="email" className="text-gray-400 mb-2">
                 Email
               </label>
               <input
@@ -92,7 +100,7 @@ function AdminLogin() {
               />
             </div>
             <div className="mb-4">
-              <label htmlFor="password" className=" text-gray-400 mb-2">
+              <label htmlFor="password" className="text-gray-400 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -111,15 +119,14 @@ function AdminLogin() {
               </div>
             </div>
             {errorMessage && (
-              <div className="mb-4 text-red-500 text-center">
-                {errorMessage}
-              </div>
+              <div className="mb-4 text-red-500 text-center">{errorMessage}</div>
             )}
             <button
               type="submit"
               className="w-full bg-orange-500 hover:bg-blue-600 text-white py-3 px-6 rounded-md transition"
+              disabled={isLoading}
             >
-              Login
+              {isLoading ? "Logging in..." : "Login"}
             </button>
           </form>
         </div>

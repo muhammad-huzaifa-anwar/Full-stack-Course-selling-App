@@ -10,32 +10,59 @@ function UpdateCourse() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [image, setImage] = useState("");
+  const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [video, setVideo] = useState(null);
+  const [videoPreview, setVideoPreview] = useState("");
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
+        const admin = JSON.parse(localStorage.getItem("admin"));
+        const token = admin?.token;
+  
+        if (!token) {
+          toast.error("Please login to admin");
+          navigate("/admin/login");
+          return;
+        }
+  
+        console.log("Token being sent:", token);
+  
         const { data } = await axios.get(`${BACKEND_URL}/course/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           withCredentials: true,
         });
-        console.log(data);
-        setTitle(data.course.title);
-        setDescription(data.course.description);
-        setPrice(data.course.price);
-        setImage(data.course.image.url);
-        setImagePreview(data.course.image.url);
+  
+        console.log("Fetched course data:", data);
+  
+        if (data.course) {
+          setTitle(data.course.title);
+          setDescription(data.course.description);
+          setPrice(data.course.price);
+          setImagePreview(data.course.image.url);
+          if (data.course.videos && data.course.videos.length > 0) {
+            setVideoPreview(data.course.videos[0].url);
+          }
+        } else {
+          toast.error("Course data not found");
+        }
+  
         setLoading(false);
       } catch (error) {
-        console.log(error);
+        console.log("Error fetching course data:", error);
         toast.error("Failed to fetch course data");
         setLoading(false);
       }
     };
+  
     fetchCourseData();
-  }, [id]);
+  }, [id, navigate]);
 
   const changePhotoHandler = (e) => {
     const file = e.target.files[0];
@@ -46,6 +73,17 @@ function UpdateCourse() {
       setImage(file);
     };
   };
+
+  const changeVideoHandler = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      setVideoPreview(reader.result);
+      setVideo(file);
+    };
+  };
+
   const handleUpdateCourse = async (e) => {
     e.preventDefault();
     const formData = new FormData();
@@ -53,7 +91,10 @@ function UpdateCourse() {
     formData.append("description", description);
     formData.append("price", price);
     if (image) {
-      formData.append("imageUrl", image);
+      formData.append("image", image);
+    }
+    if (video) {
+      formData.append("video", video);
     }
     const admin = JSON.parse(localStorage.getItem("admin"));
     const token = admin.token;
@@ -72,11 +113,11 @@ function UpdateCourse() {
           withCredentials: true,
         }
       );
-      toast.success(response.data.message || "Course updated successfully22");
+      toast.success(response.data.message || "Course updated successfully");
       navigate("/admin/our-courses"); // Redirect to courses page after update
     } catch (error) {
-      console.error(error);
-      toast.error(error.response.data.errors);
+      console.error("Error updating course:", error);
+      toast.error(error.response.data.errors || "Failed to update course");
     }
   };
 
@@ -135,6 +176,21 @@ function UpdateCourse() {
               <input
                 type="file"
                 onChange={changePhotoHandler}
+                className="w-full px-3 py-2 border border-gray-400 rounded-md outline-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-lg">Course Video</label>
+              <div className="flex items-center justify-center">
+                <video controls className="w-full max-w-sm h-auto rounded-md object-cover">
+                  <source src={videoPreview ? `${videoPreview}` : ""} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+              <input
+                type="file"
+                onChange={changeVideoHandler}
                 className="w-full px-3 py-2 border border-gray-400 rounded-md outline-none"
               />
             </div>

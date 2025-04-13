@@ -1,7 +1,7 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom"; // Link import kar diya
+import axios from "axios";
 import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../utils/utils";
 
 function OurCourses() {
@@ -10,31 +10,41 @@ function OurCourses() {
   const navigate = useNavigate();
 
   const admin = JSON.parse(localStorage.getItem("admin"));
-  const token = admin.token;
+  const token = admin?.token;
 
-  if (!token) {
-    toast.error("Please login to admin");
-    navigate("/admin/login");
-  }
+  useEffect(() => {
+    if (!token) {
+      toast.error("Please login to admin");
+      navigate("/admin/login");
+    }
+  }, [token, navigate]);
 
-  // fetch courses
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         const response = await axios.get(`${BACKEND_URL}/course/courses`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           withCredentials: true,
         });
-        console.log(response.data.courses);
+        console.log("Courses fetched:", response.data.courses);
         setCourses(response.data.courses);
         setLoading(false);
       } catch (error) {
-        console.log("error in fetchCourses ", error);
+        console.log("Error in fetchCourses:", error);
+        if (error.response?.status === 401) {
+          localStorage.removeItem("admin");
+          navigate("/admin/login");
+        }
       }
     };
-    fetchCourses();
-  }, []);
 
-  // delete courses code
+    if (token) {
+      fetchCourses();
+    }
+  }, [token, navigate]);
+
   const handleDelete = async (id) => {
     try {
       const response = await axios.delete(
@@ -50,8 +60,8 @@ function OurCourses() {
       const updatedCourses = courses.filter((course) => course._id !== id);
       setCourses(updatedCourses);
     } catch (error) {
-      console.log("Error in deleting course ", error);
-      toast.error(error.response.data.errors || "Error in deleting course");
+      console.log("Error in deleting course:", error);
+      toast.error(error.response?.data?.errors || "Error in deleting course");
     }
   };
 
@@ -71,27 +81,22 @@ function OurCourses() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {courses.map((course) => (
           <div key={course._id} className="bg-white shadow-md rounded-lg p-4">
-            {/* Course Image */}
             <img
               src={course?.image?.url}
               alt={course.title}
               className="h-40 w-full object-cover rounded-t-lg"
             />
-            {/* Course Title */}
             <h2 className="text-xl font-semibold mt-4 text-gray-800">
               {course.title}
             </h2>
-            {/* Course Description */}
             <p className="text-gray-600 mt-2 text-sm">
               {course.description.length > 200
                 ? `${course.description.slice(0, 200)}...`
                 : course.description}
             </p>
-            {/* Course Price */}
             <div className="flex justify-between mt-4 text-gray-800 font-bold">
               <div>
-                {" "}
-                ₹{course.price}{" "}
+                ₹{course.price}
                 <span className="line-through text-gray-500">₹300</span>
               </div>
               <div className="text-green-600 text-sm mt-2">10 % off</div>

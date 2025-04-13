@@ -1,4 +1,3 @@
-
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -17,20 +16,19 @@ function Purchases() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar open state
 
   const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
   const token = user?.token; // using optional chaining to avoid app crashing
 
   console.log("purchases: ", purchases);
 
   // Token handling
   useEffect(() => {
- 
     if (token) {
       setIsLoggedIn(true);
     } else {
       setIsLoggedIn(false);
     }
-  }, []);
+  }, [token]);
 
   if (!token) {
     navigate("/login");
@@ -52,7 +50,7 @@ function Purchases() {
       }
     };
     fetchPurchases();
-  }, []);
+  }, [token]);
 
   // Logout
   const handleLogout = async () => {
@@ -174,6 +172,12 @@ function Purchases() {
                     <span className="text-green-700 font-semibold text-sm">
                       ${purchase.price} only
                     </span>
+                    <Link
+                      to={`/course/${purchase._id}`}
+                      className="mt-4 inline-block bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200"
+                    >
+                      View Details
+                    </Link>
                   </div>
                 </div>
               </div>

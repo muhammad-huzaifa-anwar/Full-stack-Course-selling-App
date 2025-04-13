@@ -1,52 +1,67 @@
 import React from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./components/Home";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
-import { Toaster } from "react-hot-toast";
 import Purchases from "./components/Purchases";
 import Buy from "./components/Buy";
 import Courses from "./components/Courses";
-import AdminSignup from "./admin/AdminSignup";
-import AdminLogin from "./admin/AdminLogin";
-import Dashboard from "./admin/Dashboard";
-import CourseCreate from "./admin/CourseCreate";
-import UpdateCourse from "./admin/UpdateCourse";
-import OurCourses from "./admin/OurCourses";
+import CourseDetails from "./components/CourseDetails"; // Import CourseDetails
+import AdminSignup from "./admin/AdminSignup"; // Make sure to import correctly
+import AdminLogin from "./admin/AdminLogin"; // AdminLogin import
+import Dashboard from "./admin/Dashboard"; // Admin Dashboard import
+import CourseCreate from "./admin/CourseCreate"; // Admin CourseCreate import
+import UpdateCourse from "./admin/UpdateCourse"; // Admin UpdateCourse import
+import OurCourses from "./admin/OurCourses"; // Admin OurCourses import
 
 function App() {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const admin = JSON.parse(localStorage.getItem("admin"));
+  const userToken = localStorage.getItem("user");
+  const adminToken = localStorage.getItem("admin");
+
   return (
     <div>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-
-        {/* Other Routes */}
         <Route path="/courses" element={<Courses />} />
-        <Route path="/buy/:courseId" element={<Buy />} />
-        <Route path="/purchases" element={<Purchases/>}
-        />
-{/*         you can use below one if required 
- <Route
+        
+        {/* Protected Routes for Users */}
+        <Route
           path="/purchases"
-          element={user ? <Purchases /> : <Navigate to={"/login"} />}
-        />*/}
+          element={userToken ? <Purchases /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/buy/:courseId"
+          element={userToken ? <Buy /> : <Navigate to="/login" />}
+        />
+        
+        {/* Course Details Route */}
+        <Route path="/course/:courseId" element={<CourseDetails />} />
 
         {/* Admin Routes */}
         <Route path="/admin/signup" element={<AdminSignup />} />
         <Route path="/admin/login" element={<AdminLogin />} />
+        
+        {/* Protected Routes for Admin */}
         <Route
           path="/admin/dashboard"
-          element={admin ? <Dashboard /> : <Navigate to={"/admin/login"} />}
+          element={adminToken ? <Dashboard /> : <Navigate to="/admin/login" />}
         />
-        <Route path="/admin/create-course" element={<CourseCreate />} />
-        <Route path="/admin/update-course/:id" element={<UpdateCourse />} />
-        <Route path="/admin/our-courses" element={<OurCourses />} />
+        <Route
+          path="/admin/create-course"
+          element={adminToken ? <CourseCreate /> : <Navigate to="/admin/login" />}
+        />
+        <Route
+          path="/admin/update-course/:id"
+          element={adminToken ? <UpdateCourse /> : <Navigate to="/admin/login" />}
+        />
+        <Route
+          path="/admin/our-courses"
+          element={adminToken ? <OurCourses /> : <Navigate to="/admin/login" />}
+        />
       </Routes>
-      <Toaster />
     </div>
   );
 }

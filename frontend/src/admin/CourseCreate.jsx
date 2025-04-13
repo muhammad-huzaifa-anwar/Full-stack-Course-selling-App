@@ -3,14 +3,20 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../utils/utils";
+
 function CourseCreate() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [image, setImage] = useState("");
   const [imagePreview, setImagePreview] = useState("");
-
+  const [video, setVideo] = useState(null);
   const navigate = useNavigate();
+
+  const changeVideoHandler = (e) => {
+    const file = e.target.files[0];
+    setVideo(file);
+  };
 
   const changePhotoHandler = (e) => {
     const file = e.target.files[0];
@@ -29,26 +35,26 @@ function CourseCreate() {
     formData.append("description", description);
     formData.append("price", price);
     formData.append("image", image);
+    formData.append("video", video); // Add video to form data
 
     const admin = JSON.parse(localStorage.getItem("admin"));
-    const token = admin.token;
+    const token = admin?.token;
     if (!token) {
+      toast.error("Please login first");
       navigate("/admin/login");
       return;
     }
 
     try {
-      const response = await axios.post(
-        `${BACKEND_URL}/course/create`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        }
-      );
-      console.log(response.data);
+      const response = await axios.post(`${BACKEND_URL}/course/create`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
+      });
+
+      console.log("Course created successfully:", response.data);
       toast.success(response.data.message || "Course created successfully");
       navigate("/admin/our-courses");
       setTitle("");
@@ -56,16 +62,22 @@ function CourseCreate() {
       setImage("");
       setDescription("");
       setImagePreview("");
+      setVideo(null); // Reset video
     } catch (error) {
-      console.log(error);
-      toast.error(error.response.data.errors);
+      console.log("Error creating course:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("admin");
+        navigate("/admin/login");
+      } else {
+        toast.error(error.response?.data?.errors || "Failed to create course");
+      }
     }
   };
 
   return (
     <div>
-      <div className="min-h-screen  py-10">
-        <div className="max-w-4xl mx-auto p-6 border  rounded-lg shadow-lg">
+      <div className="min-h-screen py-10">
+        <div className="max-w-4xl mx-auto p-6 border rounded-lg shadow-lg">
           <h3 className="text-2xl font-semibold mb-8">Create Course</h3>
 
           <form onSubmit={handleCreateCourse} className="space-y-6">
@@ -76,7 +88,7 @@ function CourseCreate() {
                 placeholder="Enter your course title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-400   rounded-md outline-none"
+                className="w-full px-3 py-2 border border-gray-400 rounded-md outline-none"
               />
             </div>
 
@@ -87,7 +99,7 @@ function CourseCreate() {
                 placeholder="Enter your course description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-400   rounded-md outline-none"
+                className="w-full px-3 py-2 border border-gray-400 rounded-md outline-none"
               />
             </div>
 
@@ -98,7 +110,7 @@ function CourseCreate() {
                 placeholder="Enter your course price"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-400   rounded-md outline-none"
+                className="w-full px-3 py-2 border border-gray-400 rounded-md outline-none"
               />
             </div>
 
@@ -114,7 +126,16 @@ function CourseCreate() {
               <input
                 type="file"
                 onChange={changePhotoHandler}
-                className="w-full px-3 py-2 border border-gray-400   rounded-md outline-none"
+                className="w-full px-3 py-2 border border-gray-400 rounded-md outline-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-lg">Course Video</label>
+              <input
+                type="file"
+                onChange={changeVideoHandler}
+                className="w-full px-3 py-2 border border-gray-400 rounded-md outline-none"
               />
             </div>
 
