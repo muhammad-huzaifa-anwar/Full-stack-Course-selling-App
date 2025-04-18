@@ -15,9 +15,9 @@ import cookieParser from "cookie-parser";
 const app = express();
 dotenv.config();
 
+
+
 console.log("✅ FRONTEND_URL:", process.env.FRONTEND_URL); // 👈 ye line add karo
-
-
 //middleware
 app.use(express.json());
 app.use(cookieParser());
