@@ -1,2 +1,2 @@
-export const BACKEND_URL = "https://full-stack-course-selling-backend.vercel.app";
+export const BACKEND_URL = "https://full-stack-course-selling-app.vercel.app";
 
