@@ -16,6 +16,7 @@ const app = express();
 dotenv.config();
 
 
+console.log("🔥 Stripe API Key from Environment:", process.env.STRIPE_SECRET_KEY);
 
 console.log("✅ FRONTEND_URL:", process.env.FRONTEND_URL); // 👈 ye line add karo
 //middleware
