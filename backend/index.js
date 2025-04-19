@@ -15,10 +15,6 @@ import cookieParser from "cookie-parser";
 const app = express();
 dotenv.config();
 
-
-console.log("🔥 Stripe API Key from Environment:", process.env.STRIPE_SECRET_KEY);
-
-console.log("✅ FRONTEND_URL:", process.env.FRONTEND_URL); // 👈 ye line add karo
 //middleware
 app.use(express.json());
 app.use(cookieParser());
@@ -63,4 +59,3 @@ cloudinary.config({
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-// Force redeploy

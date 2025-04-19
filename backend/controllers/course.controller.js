@@ -170,6 +170,7 @@ export const courseDetails = async (req, res) => {
 import Stripe from "stripe";
 import config from "../config.js";
 const stripe = new Stripe(config.STRIPE_SECRET_KEY);
+console.log(config.STRIPE_SECRET_KEY);
 
 export const buyCourses = async (req, res) => {
   const { userId } = req;
@@ -177,26 +178,32 @@ export const buyCourses = async (req, res) => {
 
   try {
     const course = await Course.findById(courseId);
-    if (!course) return res.status(404).json({ errors: "Course not found" });
+    if (!course) {
+      return res.status(404).json({ errors: "Course not found" });
+    }
 
     const existingPurchase = await Purchase.findOne({ userId, courseId });
     if (existingPurchase) {
-      return res.status(400).json({ errors: "User already purchased this course" });
+      return res.status(400).json({ errors: "User has already purchased this course" });
     }
 
-    const amount = Math.round(course.price * 100); // ✅ Convert to cents
+    const amount = Math.round(course.price * 100); // Convert price to cents for Stripe
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount,
       currency: "usd",
       payment_method_types: ["card"],
     });
 
+    console.log("PaymentIntent Created:", paymentIntent); // Log for debugging
+    console.log("ClientSecret Returned:", paymentIntent.client_secret); // Log clientSecret
+
     res.status(201).json({
-      message: "Course purchased successfully",
+      message: "Payment intent created successfully",
+      course,
       clientSecret: paymentIntent.client_secret,
     });
   } catch (error) {
-    console.log("Stripe Error:", error.message);
-    res.status(500).json({ errors: error.message || "Payment failed" });
+    console.error("Error in buyCourses:", error.message);
+    res.status(500).json({ errors: "Error in course buying" });
   }
 };

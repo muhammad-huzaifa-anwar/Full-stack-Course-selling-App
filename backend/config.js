@@ -3,10 +3,13 @@ dotenv.config();
 
 const JWT_USER_PASSWORD = process.env.JWT_USER_PASSWORD;
 const JWT_ADMIN_PASSWORD = process.env.JWT_ADMIN_PASSWORD;
+
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-  
+
+console.log("Stripe Secret Key:", STRIPE_SECRET_KEY); // Add this for debugging
+
 export default {
-  JWT_USER_PASSWORD: process.env.JWT_USER_PASSWORD,
-  JWT_ADMIN_PASSWORD: process.env.JWT_ADMIN_PASSWORD,
-  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+  JWT_USER_PASSWORD,
+  JWT_ADMIN_PASSWORD,
+  STRIPE_SECRET_KEY,
 };
